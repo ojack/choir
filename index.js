@@ -11,16 +11,29 @@ const vidContainers = {}
 var localVid
 var numStreams = 0
 var peers = []
-var multiPeer, localId
+var multiPeer, localId, container
 
 const NUM_ROWS = 3
-const NUM_CHOIR = 4
+const NUM_CHOIR = 8
 const REPEAT_TIME = 1000
+const VID_WIDTH = 160
+const VID_HEIGHT = 120
 
 var frames = 0
 window.onload = function(){
+  container = document.createElement('div')
 
-  getUserMedia({ audio: true, video: { width: 320, height: 240}}, function (err, stream) {
+  var top = (window.innerHeight - VID_HEIGHT*3)/2
+  css(container, {
+    position: 'fixed',
+    right: '0px',
+    top: top+'px',
+    width: window.innerWidth,
+    'overflow-x': 'scroll'
+  })
+
+  document.body.appendChild(container)
+  getUserMedia({ audio: true, video: { width: VID_WIDTH, height: VID_HEIGHT}}, function (err, stream) {
     // if the browser doesn't support user media
     // or the user says "no" the error gets passed
     // as the first argument.
@@ -55,13 +68,13 @@ window.onload = function(){
           peers.forEach((id)=>{
             var el = document.createElement('div')
             css(el, {
-              width: "2000px",
-              height: window.innerHeight/NUM_ROWS+ "px"
+              width: VID_WIDTH*(NUM_CHOIR+1)  + 'px',
+              height: VID_HEIGHT+ 'px'
             })
             vidContainers[id] = {
               el: el
             }
-            document.body.appendChild(vidContainers[id].el)
+            container.appendChild(vidContainers[id].el)
           })
           vidContainers[localId].stream = stream
 
@@ -83,14 +96,14 @@ window.onload = function(){
           peers.sort
           var el = document.createElement('div')
           css(el, {
-            width: "2000px",
-            height: window.innerHeight/NUM_ROWS+ "px"
+            width: VID_WIDTH*(NUM_CHOIR+1)  + 'px',
+            height: VID_HEIGHT+ "px"
           })
 
           vidContainers[data.id] = {
             el: el
           }
-          document.body.appendChild(vidContainers[data.id].el)
+          container.appendChild(vidContainers[data.id].el)
           //console.log("data peers", data, peers)
         }
       //  setDomFromPeerObject()
@@ -108,7 +121,7 @@ window.onload = function(){
       multiPeer.on('close', function (id) {
         numStreams--
         peers.splice(peers.indexOf(id), 1)
-        document.body.removeChild(vidContainers[id].el)
+        container.removeChild(vidContainers[id].el)
         delete vidContainers[id]
         console.log("ppers", peers)
       })
@@ -118,7 +131,7 @@ window.onload = function(){
 
   document.addEventListener("keydown", function(e){
     console.log("key", e.keyCode)
-    if(e.keyCode===83) {
+    if(e.keyCode===67) {
       console.log("starting choir")
       startChoir()
     }
@@ -134,10 +147,10 @@ function startChoir() {
 function setDomFromPeerObject() {
   //remove existing dom elements
   while (document.body.firstChild) {
-    document.body.removeChild(document.body.firstChild);
+  container.removeChild(document.body.firstChild);
   }
   peers.forEach((id) => {
-    if(vidContainers[id].el) document.body.appendChild(vidContainers[id].el)
+    if(vidContainers[id].el) container.appendChild(vidContainers[id].el)
   })
 }
 
@@ -145,11 +158,11 @@ function initElements(){
   for(var i = 0; i < NUM_ROWS; i++) {
     var el = document.createElement('div')
     css(el, {
-      width: "2000px",
-      height: window.innerHeight/NUM_ROWS+ "px"
+      width: VID_WIDTH*(NUM_CHOIR+1)  + 'px',
+      height: VID_HEIGHT+ "px"
     })
     console.log(el)
-    document.body.appendChild(el)
+    container.appendChild(el)
     vidContainers.push(el)
   }
 }
@@ -158,6 +171,8 @@ function startRecording(stream, id) {
   videoElement.srcObject = stream
   videoElement.play()
   videoElement.volume = 0
+  videoElement.width = VID_WIDTH
+  videoElement.height = VID_HEIGHT
   return videoElement
   //  document.body.appendChild(videoElement)
   //  console.log("INDEX", id, peers, peers.indexOf(id), vidContainers[peers.indexOf(id)])
@@ -170,12 +185,13 @@ function recordLoop(obj) {
 
   recordClip(obj, function() {
     setTimeout(function() {
-      console.log('and go');
-      recordLoop(obj);
+      console.log('and go')
+      recordLoop(obj)
     }, 1);
   });
 
 }
+
 
 function recordClip(obj, doneCallback) {
   var recorder = new MediaRecorder(obj.stream,  {
@@ -186,32 +202,36 @@ function recordClip(obj, doneCallback) {
     recorder.stop();
     recorder.ondataavailable = function (evt) {
     //  console.log('data', evt);
-      var videoURL = URL.createObjectURL(evt.data);
-      addVideo(videoURL, obj.el);
-      doneCallback();
+      var videoURL = URL.createObjectURL(evt.data)
+      addVideo(videoURL, obj.el)
+      doneCallback()
     };
-  }, REPEAT_TIME);
+  }, REPEAT_TIME)
 }
 
 function addVideo(src, parent) {
-  var videos = parent.querySelectorAll('video');
+  var videos = parent.querySelectorAll('video')
    //else {
-    var el = document.createElement('video');
+    var el = document.createElement('video')
     el.controls = true;
     el.src = src;
     el.controls = false
     el.onloadeddata = function() {
-      el.play();
+      el.play()
+      el.volume = 0
+      el.width = VID_WIDTH
+      el.height = VID_HEIGHT
       // Loop seems to be broken (?)
       el.setAttribute('loop', true);
       parent.insertBefore(el, videos[videos.length-1])
       if(videos.length > NUM_CHOIR) {
-        var first = videos[0];
-        first.parentNode.removeChild(first);
+        var first = videos[0]
+        first.parentNode.removeChild(first)
       }
   //  };
 
   }
+}
 /*  var el = document.createElement('video');
   el.controls = true;
   el.src = src;
@@ -231,4 +251,14 @@ function addVideo(src, parent) {
     // Loop seems to be broken (?)
     el.setAttribute('loop', true);
   };*/
+
+window.onresize = function(){
+  var top = (window.innerHeight - VID_HEIGHT*3)/2
+  css(container, {
+    position: 'fixed',
+    right: '0px',
+    top: top+'px',
+    width: window.innerWidth,
+    'overflow-x': 'scroll'
+  })
 }
