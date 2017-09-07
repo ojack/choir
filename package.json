@@ -1,0 +1,19 @@
+{
+  "name": "node-body",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "budo --ssl --open index.js"
+  },
+  "author": "Olivia Jack",
+  "license": "MIT",
+  "dependencies": {
+    "dom-css": "^2.1.0",
+    "getusermedia": "^2.0.1",
+    "shortid": "^2.2.8",
+    "simple-peer": "^8.1.1",
+    "socket.io-client": "^2.0.3"
+  }
+}
