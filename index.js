@@ -5,16 +5,19 @@
 const MultiPeer = require('./libs/MultiPeer.js')
 const shortid = require('shortid')
 const css = require('dom-css')
-
+const VideoRepeater = require('./VideoRepeater.js')
 const getUserMedia = require('getusermedia')
 const vidContainers = {}
 var localVid
-var numStreams = 0
-var peers = []
+//var numStreams = 0
+//var peers = []
 var multiPeer, localId, container
+var streamObjects = {}
+var stopped = false
 
 const NUM_ROWS = 3
-const NUM_CHOIR = 8
+//const NUM_CHOIR = 8
+const NUM_CHOIR = 3
 const REPEAT_TIME = 1000
 const VID_WIDTH = 160
 const VID_HEIGHT = 120
@@ -41,7 +44,7 @@ window.onload = function(){
       console.log('failed');
     } else {
       console.log('got a stream', stream);
-      numStreams++
+      //numStreams++
       var d = new Date();
       var localId = d.getTime(); // milliseconds since 1970, helpful with keeping consistent ordering for all connected peers
       //localId = shortid.generate()
@@ -55,9 +58,17 @@ window.onload = function(){
         }})
 
 
-        //  peers.push(localId)
-        localVid = startRecording(stream, localId)
-        //  document.body.appendChild(localVid)
+        //localVid = initVidElement(stream, localId)
+        localVid = new VideoRepeater({
+          stream: stream,
+          id: localId,
+          width: VID_WIDTH,
+          height: VID_HEIGHT,
+          numReps: NUM_CHOIR,
+          cycleTime: REPEAT_TIME
+        })
+        streamObjects[localId] = localVid
+        container.appendChild(localVid.container)
         //initial connection with server
         // to do: what happens if more peers than allowed?
         multiPeer.on('peers', function (_peers) {
@@ -65,7 +76,7 @@ window.onload = function(){
           if(peers.indexOf(localId) < 0) peers.push(localId)
           peers.sort
           console.log("peers", peers)
-          peers.forEach((id)=>{
+        /*  peers.forEach((id)=>{
             var el = document.createElement('div')
             css(el, {
               width: VID_WIDTH*(NUM_CHOIR+1)  + 'px',
@@ -74,14 +85,17 @@ window.onload = function(){
             vidContainers[id] = {
               el: el
             }
-            container.appendChild(vidContainers[id].el)
-          })
-          vidContainers[localId].stream = stream
+            //container.appendChild(vidContainers[id].el)
+          })*/
+        //  vidContainers[localId].stream = stream
 
           /* while (document.body.firstChild) {
           document.body.removeChild(document.body.firstChild);
         }*/
-        vidContainers[localId].el.appendChild(localVid)
+      //  vidContainers[localId].el.appendChild(localVid)
+      //  recordLoop(vidContainers[localId])
+      //  startChoir()
+
         //setDomFromPeerObject()
         //  console.log("peers", peers)
 
@@ -91,7 +105,7 @@ window.onload = function(){
       //
       multiPeer.on('new peer', function (data) {
         console.log("NEW PEER", data)
-        if(peers.length < NUM_ROWS){
+      /*  if(peers.length < NUM_ROWS){
           peers.push(data.id)
           peers.sort
           var el = document.createElement('div')
@@ -105,49 +119,83 @@ window.onload = function(){
           }
           container.appendChild(vidContainers[data.id].el)
           //console.log("data peers", data, peers)
-        }
+        }*/
       //  setDomFromPeerObject()
       })
 
       multiPeer.on('stream', function (peerId, peerStream) {
-        numStreams++
+
         console.log("STREAM", peerId)
-        vidContainers[peerId].stream = peerStream
-        var rVid = startRecording(peerStream, peerId)
-        vidContainers[peerId].el.appendChild(rVid)
+        var newVid = new VideoRepeater({
+          stream: peerStream,
+          id: peerId,
+          width: VID_WIDTH,
+          height: VID_HEIGHT,
+          numReps: NUM_CHOIR,
+          cycleTime: REPEAT_TIME
+        })
+        streamObjects[peerId] = newVid
+
+        container.appendChild(newVid.container)
+      //  vidContainers[peerId].stream = peerStream
+        // var rVid = initVidElement(peerStream, peerId)
+        // vidContainers[peerId].el.appendChild(rVid)
+        // recordLoop(vidContainers[peerId])
+
+      //  stopChoir()
+      //  startChoir()
         //if(numStreams === NUM_ROWS) startChoir()
       })
 
       multiPeer.on('close', function (id) {
-        numStreams--
+        console.log("on close")
+        streamObjects[id].destroy()
+        container.removeChild(streamObjects[id].container)
+        delete streamObjects[id]
+      /*  numStreams--
         peers.splice(peers.indexOf(id), 1)
         container.removeChild(vidContainers[id].el)
         delete vidContainers[id]
-        console.log("ppers", peers)
+        console.log("ppers", peers)*/
       })
 
     }
   })
 
-  document.addEventListener("keydown", function(e){
-    console.log("key", e.keyCode)
-    if(e.keyCode===67) {
-      console.log("starting choir")
+  document.addEventListener('keydown', function (e) {
+    console.log('key', e.keyCode)
+    if (e.keyCode === 67) {
+      console.log('starting choir')
       startChoir()
+    } else if(e.keyCode === 68){
+      stopChoir()
     }
-  }, false);
+  }, false)
+}
+
+function stopChoir () {
+   stopped = true
+  /*  peers.forEach((id) => {
+      console.log("removing", vidContainers[id])
+      while (vidContainers[id].el.childNodes.length > 1) {
+        vidContainers[id].el.removeChild(vidContainers[id].el.firstChild)
+      }
+    })*/
+
 }
 
 function startChoir() {
+  console.log("starting choir")
+  stopped = false
   peers.forEach((id) => {
-    recordLoop(vidContainers[id])
+    if (vidContainers[id].stream) recordLoop(vidContainers[id])
   })
 }
 
 function setDomFromPeerObject() {
   //remove existing dom elements
   while (document.body.firstChild) {
-  container.removeChild(document.body.firstChild);
+  container.removeChild(document.body.firstChild)
   }
   peers.forEach((id) => {
     if(vidContainers[id].el) container.appendChild(vidContainers[id].el)
@@ -166,7 +214,7 @@ function initElements(){
     vidContainers.push(el)
   }
 }
-function startRecording(stream, id) {
+function initVidElement(stream, id) {
   const videoElement = document.createElement('video')
   videoElement.srcObject = stream
   videoElement.play()
@@ -181,12 +229,14 @@ function startRecording(stream, id) {
 
 }
 
-function recordLoop(obj) {
+function recordLoop (obj) {
 
-  recordClip(obj, function() {
-    setTimeout(function() {
-      console.log('and go')
-      recordLoop(obj)
+  recordClip (obj, function() {
+    setTimeout (function() {
+      console.log('repeat')
+      if(!stopped){
+        recordLoop(obj)
+      }
     }, 1);
   });
 
@@ -200,16 +250,20 @@ function recordClip(obj, doneCallback) {
   recorder.start();
   setTimeout(function() {
     recorder.stop();
+
     recorder.ondataavailable = function (evt) {
     //  console.log('data', evt);
-      var videoURL = URL.createObjectURL(evt.data)
-      addVideo(videoURL, obj.el)
+      if(!stopped){
+        var videoURL = URL.createObjectURL(evt.data)
+        addVideo(videoURL, obj.el)
+      }
       doneCallback()
     };
   }, REPEAT_TIME)
 }
 
 function addVideo(src, parent) {
+  console.log("parent", parent)
   var videos = parent.querySelectorAll('video')
    //else {
     var el = document.createElement('video')
@@ -226,6 +280,7 @@ function addVideo(src, parent) {
       parent.insertBefore(el, videos[videos.length-1])
       if(videos.length > NUM_CHOIR) {
         var first = videos[0]
+        console.log("removing ", first, first.parentNode)
         first.parentNode.removeChild(first)
       }
   //  };
