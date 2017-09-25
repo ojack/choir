@@ -12,7 +12,7 @@ var multiPeer, container
 var streamObjects = {}
 
 const NUM_ROWS = 4
-const NUM_CHOIR = 3
+const NUM_CHOIR = 8
 const REPEAT_TIME = 1000
 const VID_WIDTH = 160
 const VID_HEIGHT = 120
