@@ -56,7 +56,8 @@ window.onload = function () {
           width: VID_WIDTH,
           height: VID_HEIGHT,
           numReps: NUM_CHOIR,
-          cycleTime: REPEAT_TIME
+          cycleTime: REPEAT_TIME,
+          volume: 0
         })
         streamObjects[localId] = localVid
         container.appendChild(localVid.container)
@@ -69,7 +70,8 @@ window.onload = function () {
           width: VID_WIDTH,
           height: VID_HEIGHT,
           numReps: NUM_CHOIR,
-          cycleTime: REPEAT_TIME
+          cycleTime: REPEAT_TIME,
+          volume: 1
         })
         streamObjects[peerId] = newVid
         var children = container.children

@@ -7,7 +7,7 @@ var VideoRepeater = function (options) {
     this.height = options.height
     this.numReps = options.numReps
     this.cycleTime = options.cycleTime
-
+    this.volume = options.volume
     this.id = options.id
     this.stream = options.stream
       this.initContainer()
@@ -22,7 +22,7 @@ VideoRepeater.prototype.initVidElement = function (stream) {
   const videoElement = document.createElement('video')
   videoElement.srcObject = stream
   videoElement.play()
-  videoElement.volume = 0
+  videoElement.volume = this.volume
   videoElement.width = this.width
   videoElement.height = this.height
   return videoElement

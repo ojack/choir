@@ -2433,7 +2433,7 @@ var VideoRepeater = function (options) {
     this.height = options.height
     this.numReps = options.numReps
     this.cycleTime = options.cycleTime
-
+    this.volume = options.volume
     this.id = options.id
     this.stream = options.stream
       this.initContainer()
@@ -2448,7 +2448,7 @@ VideoRepeater.prototype.initVidElement = function (stream) {
   const videoElement = document.createElement('video')
   videoElement.srcObject = stream
   videoElement.play()
-  videoElement.volume = 0
+  videoElement.volume = this.volume
   videoElement.width = this.width
   videoElement.height = this.height
   return videoElement
@@ -2550,7 +2550,7 @@ var multiPeer, container
 var streamObjects = {}
 
 const NUM_ROWS = 4
-const NUM_CHOIR = 3
+const NUM_CHOIR = 8
 const REPEAT_TIME = 1000
 const VID_WIDTH = 160
 const VID_HEIGHT = 120
@@ -2594,7 +2594,8 @@ window.onload = function () {
           width: VID_WIDTH,
           height: VID_HEIGHT,
           numReps: NUM_CHOIR,
-          cycleTime: REPEAT_TIME
+          cycleTime: REPEAT_TIME,
+          volume: 0
         })
         streamObjects[localId] = localVid
         container.appendChild(localVid.container)
@@ -2607,7 +2608,8 @@ window.onload = function () {
           width: VID_WIDTH,
           height: VID_HEIGHT,
           numReps: NUM_CHOIR,
-          cycleTime: REPEAT_TIME
+          cycleTime: REPEAT_TIME,
+          volume: 1
         })
         streamObjects[peerId] = newVid
         var children = container.children
