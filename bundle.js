@@ -165,7 +165,7 @@ window.onload = function () {
         server: 'https://live-lab-v1.glitch.me/',
         stream: stream,
         peerOptions: {
-          reconnectTimer: 1000,
+          reconnectTimer: 100,
           trickle: false
         },
 
@@ -576,13 +576,15 @@ Peer.WEBRTC_SUPPORT = !!getBrowserRTC()
 Peer.config = {
   iceServers: [
     {
-      urls: 'stun:stun.l.google.com:19302'
+      urls: 'stun:stun1.l.google.com:19302'
     },
     {
-      urls: 'stun:stun.ekiga.net'
+      urls: 'stun:stun.xten.com'
     },
     {
-      urls: 'stun:global.stun.twilio.com:3478?transport=udp'
+      urls: 'turn:numb.viagenie.ca',
+      username: 'ojackson@gmail.com',
+      credential: 'fl1pturn'
     }
   ]
 }
@@ -909,7 +911,7 @@ Peer.prototype._onIceStateChange = function () {
   }
   if (iceConnectionState === 'failed') {
   //  console.log("ice failed")
-    //self._destroy(new Error('Ice connection failed.'))
+    self._destroy(new Error('Ice connection failed.'))
   }
   if (iceConnectionState === 'closed') {
     self._destroy()
