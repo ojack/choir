@@ -50,7 +50,7 @@ window.onload = function () {
         server: 'https://live-lab-v1.glitch.me/',
         stream: stream,
         peerOptions: {
-          reconnectTimer: 1000,
+          reconnectTimer: 100,
           trickle: false
         },
 
