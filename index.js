@@ -14,13 +14,17 @@ var streamObjects = {}
 const NUM_ROWS = 4
 const NUM_CHOIR = 8
 const REPEAT_TIME = 1000
-const VID_WIDTH = 160
-const VID_HEIGHT = 120
+const CONST_VID_WIDTH = 160
+const CONST_VID_HEIGHT = 120
+
+var vid_width, vid_height;
 
 window.onload = function () {
   container = document.createElement('div')
-
-  var top = (window.innerHeight - VID_HEIGHT * NUM_ROWS)/2
+  vid_width = window.innerWidth/NUM_CHOIR
+  vid_height = vid_width * (CONST_VID_HEIGHT/CONST_VID_WIDTH)
+  //var top = (window.innerHeight - vid_height * NUM_ROWS)/2
+  var top = 0
   css(container, {
     position: 'fixed',
     right: '0px',
@@ -30,7 +34,7 @@ window.onload = function () {
   })
 
   document.body.appendChild(container)
-  getUserMedia({ audio: true, video: { width: VID_WIDTH, height: VID_HEIGHT } }, function (err, stream) {
+  getUserMedia({ audio: true, video: { width: CONST_VID_WIDTH, height: CONST_VID_HEIGHT } }, function (err, stream) {
     // if the browser doesn't support user media
     // or the user says "no" the error gets passed
     // as the first argument.
@@ -45,6 +49,11 @@ window.onload = function () {
         room: 'node-body',
         server: 'https://live-lab-v1.glitch.me/',
         stream: stream,
+        peerOptions: {
+          reconnectTimer: 1000,
+          trickle: false
+        },
+
         userData: {
           uuid: localId,
           nickname: 'test'
@@ -53,12 +62,13 @@ window.onload = function () {
         var localVid = new VideoRepeater({
           stream: stream,
           id: localId,
-          width: VID_WIDTH,
-          height: VID_HEIGHT,
+          width: vid_width,
+          height: vid_height,
           numReps: NUM_CHOIR,
           cycleTime: REPEAT_TIME,
           volume: 0
         })
+
         streamObjects[localId] = localVid
         container.appendChild(localVid.container)
 
@@ -67,8 +77,8 @@ window.onload = function () {
         var newVid = new VideoRepeater({
           stream: peerStream,
           id: peerId,
-          width: VID_WIDTH,
-          height: VID_HEIGHT,
+          width: vid_width,
+          height: vid_height,
           numReps: NUM_CHOIR,
           cycleTime: REPEAT_TIME,
           volume: 1
@@ -124,6 +134,10 @@ window.onload = function () {
         container.removeChild(streamObjects[id].container)
         delete streamObjects[id]
       })
+
+      multiPeer.on('peers', function(peers){
+        console.log("PEERS", peers)
+      })
     }
   })
 
@@ -137,7 +151,10 @@ window.onload = function () {
 }
 
 window.onresize = function () {
-  var top = (window.innerHeight - VID_HEIGHT * NUM_ROWS) / 2
+  vid_width = window.innerWidth/NUM_CHOIR
+  vid_height = vid_width * (CONST_VID_HEIGHT/CONST_VID_WIDTH)
+  //var top = (window.innerHeight - vid_height * NUM_ROWS) / 2
+  var top = 0
   css(container, {
     position: 'fixed',
     right: '0px',
@@ -145,4 +162,8 @@ window.onresize = function () {
     width: window.innerWidth,
     'overflow-x': 'scroll'
   })
+  for(var id in streamObjects){
+    streamObjects[id].width =  vid_width
+    streamObjects[id].height =  vid_height
+  }
 }

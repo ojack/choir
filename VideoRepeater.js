@@ -43,7 +43,7 @@ VideoRepeater.prototype.repeat = function(){
 //  console.log("repeating")
   this.recordClip ( function() {
   //  console.log("recordClip called", this)
-    setTimeout (function() {
+    this.repeatTimeout = setTimeout (function() {
   //    console.log('repeat')
     //  if(!stopped){
         this.repeat()
@@ -55,12 +55,12 @@ VideoRepeater.prototype.repeat = function(){
 VideoRepeater.prototype.recordClip = function(doneCallback) {
 //  console.log("recording", this)
   var recorder = new MediaRecorder(this.stream,  {
-    type: 'video/mp4'
+  //  type: 'video/mp4'
   });
 //    console.log("starting recording", recorder)
   recorder.start()
 
-  setTimeout(function() {
+  this.recorderTimeout = setTimeout(function() {
     recorder.stop();
   //  console.log("stopping recording", recorder)
     recorder.ondataavailable = function (evt) {
@@ -79,7 +79,9 @@ VideoRepeater.prototype.recordClip = function(doneCallback) {
 }
 
 VideoRepeater.prototype.destroy = function () {
-
+  console.log("destroying")
+  clearTimeout(this.recorderTimeout)
+  clearTimeout(this.repeatTimeout)
 }
 
 function addVideo (src, parent, opts) {

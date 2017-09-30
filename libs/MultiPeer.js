@@ -1,7 +1,7 @@
 // Module for handling connections to multiple peers
 
 var io = require('socket.io-client')
-var SimplePeer = require('simple-peer')
+var SimplePeer = require('./simple-peer-edited.js')
 var extend = Object.assign
 var events = require('events').EventEmitter
 var inherits = require('inherits')
